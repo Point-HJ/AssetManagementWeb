@@ -23,18 +23,72 @@ namespace AssetManagementWeb.Controllers
             return View();
         }
 
-
-        // GET: Asset/Details/5
-        public ActionResult Details(int id)
+        public ActionResult List()
         {
-            return View();
+            List<LocatedAssetsViewModel> model = new List<LocatedAssetsViewModel>();
+
+            PointSQLSrv1Entities entities = new PointSQLSrv1Entities();
+            try
+            {
+                List<AssetLocations> assets = entities.AssetLocations.ToList();
+
+                //muodostetaan näkymämalli tietokannan rivien pohjalta
+
+                foreach (AssetLocations asset in assets )
+                {
+                    LocatedAssetsViewModel view = new LocatedAssetsViewModel();
+                    view.Id = asset.Id;
+                    view.LocationCode = asset.AssetLocation.Code;
+                    view.LocationName = asset.AssetLocation.Name;
+                    view.AssetCode = asset.Assets.Code;
+                    view.AssetName = asset.Assets.Type + ": "+asset.Assets.Model;
+                    view.LastSeen = asset.LastSeen.ToString();
+
+                    model.Add(view);
+                }
+            }
+            finally
+            {
+                entities.Dispose();
+            }
+
+            return View(model);
         }
 
-        // GET: Asset/Create
-        public ActionResult Create()
+
+        public ActionResult ListJson()
         {
-            return View();
+            List<LocatedAssetsViewModel> model = new List<LocatedAssetsViewModel>();
+
+            PointSQLSrv1Entities entities = new PointSQLSrv1Entities();
+            try
+            {
+                List<AssetLocations> assets = entities.AssetLocations.ToList();
+
+                //muodostetaan näkymämalli tietokannan rivien pohjalta
+
+                foreach (AssetLocations asset in assets)
+                {
+                    LocatedAssetsViewModel view = new LocatedAssetsViewModel();
+                    view.Id = asset.Id;
+                    view.LocationCode = asset.AssetLocation.Code;
+                    view.LocationName = asset.AssetLocation.Name;
+                    view.AssetCode = asset.Assets.Code;
+                    view.AssetName = asset.Assets.Type + ": " + asset.Assets.Model;
+                    view.LastSeen = asset.LastSeen.ToString();
+
+                    model.Add(view);
+                }
+            }
+            finally
+            {
+                entities.Dispose();
+            }
+
+            return Json(model, JsonRequestBehavior.AllowGet);
         }
+
+
 
         // POST: Asset/Create
         [HttpPost]
@@ -55,11 +109,12 @@ namespace AssetManagementWeb.Controllers
         [HttpPost]
         public JsonResult AssignLocation()
         {
+
             string json = Request.InputStream.ReadToEnd();
             AssingnLocationModel inputData = 
                 JsonConvert.DeserializeObject<AssingnLocationModel>(json);
 
-            bool succes = false;
+            bool success = false;
             string error = "";
             PointSQLSrv1Entities entities = new PointSQLSrv1Entities();
             try
@@ -85,7 +140,7 @@ namespace AssetManagementWeb.Controllers
                     entities.AssetLocations.Add(newEntry);
                     entities.SaveChanges();
 
-                    succes = true;
+                    success = true;
                 }
             }
             catch (Exception ex)
@@ -99,7 +154,7 @@ namespace AssetManagementWeb.Controllers
             }
 
             //palautetaan JSON-muotoinen tulos kutsujalle
-            var result = new { succes = succes, error = error };
+            var result = new { success = success, error = error };
             return Json(result);
         }
 
